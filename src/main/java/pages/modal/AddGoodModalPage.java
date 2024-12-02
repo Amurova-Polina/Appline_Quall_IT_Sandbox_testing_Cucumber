@@ -30,6 +30,9 @@ public class AddGoodModalPage {
     @FindBy(xpath = "//button[contains(text(), 'Сохранить')]")
     private WebElement saveButton;
 
+    @FindBy(xpath = "//button[contains(@data-dismiss, 'modal')]")
+    private WebElement modalCloseButton;
+
     public AddGoodModalPage(WebDriver webDriver) {
         webDriverWait = new WebDriverWait(webDriver, Duration.ofSeconds(30));
         PageFactory.initElements(webDriver, this);
@@ -72,5 +75,10 @@ public class AddGoodModalPage {
             ));
         } catch (WebDriverException ignored) {
         }
+    }
+
+    public AddGoodModalPage clickModalCloseButton() {
+        modalCloseButton.click();
+        return this;
     }
 }
