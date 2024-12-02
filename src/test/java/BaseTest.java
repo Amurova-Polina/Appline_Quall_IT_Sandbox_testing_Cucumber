@@ -18,28 +18,28 @@ public class BaseTest {
     protected WebDriver chromeDriver;
     protected Statement statement;
 
-//    @BeforeAll
-//    static void setupStand() {
-//        try {
-//            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "libs/qualit-sandbox.jar");
-//            process = processBuilder.start();
-//
-//            // без этого у меня не успевает подняться приложение целиком :(
-//            Thread.sleep(10_000);
-//        } catch (IOException | InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+    @BeforeAll
+    static void setupStand() {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "libs/qualit-sandbox.jar");
+            process = processBuilder.start();
+
+            // без этого у меня не успевает подняться приложение целиком :(
+            Thread.sleep(10_000);
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @BeforeAll
     static void setupChromeDriver() {
         WebDriverManager.chromedriver().setup();
     }
 
-//    @AfterAll
-//    static void closeStand() {
-//        process.destroyForcibly();
-//    }
+    @AfterAll
+    static void closeStand() {
+        process.destroyForcibly();
+    }
 
     @BeforeEach
     public void initChromeDriver() {

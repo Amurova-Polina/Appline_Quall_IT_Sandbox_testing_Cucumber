@@ -181,6 +181,9 @@ public class TestCases extends BaseTest {
         GoodsPage goodsPage = new GoodsPage(chromeDriver);
         var goodsTableInitialData = goodsPage.parseTableWithoutStalenessException();
 
+        var fruitName = "Манго";
+        var secondfruitName = "Слива";
+
         // Шаг 1.2: проверка UI
         assertTrue(chromeDriver.getCurrentUrl().contains("/food"));
         assertTrue(goodsPage.getGoodsTable().isDisplayed());
@@ -189,7 +192,13 @@ public class TestCases extends BaseTest {
         assertEquals("rgba(0, 123, 255, 1)", goodsPage.getAddButton().getCssValue("background-color"));
 
         // Шаг 1.3: фиксируем исходное состояние таблицы в БД
-
+        List<Good> listBeforeAdding;
+        try {
+            ResultSet rs = statement.executeQuery(selectQuery);
+            listBeforeAdding = parseResultSet(rs);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         // Шаг 1.4: проверка UI модального окна добавления товара
         goodsPage.clickAddButton();
@@ -203,9 +212,17 @@ public class TestCases extends BaseTest {
 
         //Шаг 2: проверка того, что в БД нет товара, который собираемся добавить
 
+        long isTableContainsAddingName = listBeforeAdding
+                .stream()
+                .filter(good -> good.getName().contains(fruitName))
+                .count();
+        assertEquals(isTableContainsAddingName,
+                0,
+                "Таблица содержит добавляемое наименование: '%s'".formatted(fruitName));
 
-        //Шаг 3: добавить в бд дубликаты товаров, которые будет добавлять потом
-        Good addingGood = new Good("Манго", "FRUIT", true);
+
+        //Шаг 3: добавить в бд дубликаты товаров, которые будем добавлять потом
+        Good addingGood = new Good(fruitName, "FRUIT", true);
 
         try {
             String insert = String.format(
@@ -215,14 +232,11 @@ public class TestCases extends BaseTest {
                     addingGood.isExotic()
             );
             int affectedRows = statement.executeUpdate(insert);
-            System.out.println("Inserted rows: " + affectedRows);
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         // Шаг 4-8
-        var fruitName = "Манго";
         addGoodModalPage.setNameInput(fruitName)
                 .selectType(GoodType.FRUIT);
 
@@ -244,12 +258,21 @@ public class TestCases extends BaseTest {
         assertTrue(Boolean.parseBoolean(addedRow.get("Экзотический")));
 
         // Шаг 9: Проверить, что дубликат сохранился в БД
+        List<Good> listAfterAddingFruitName;
+        try {
+            ResultSet rs2 = statement.executeQuery(selectQuery);
+            listAfterAddingFruitName = parseResultSet(rs2);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        Good addedFruitName = new Good(fruitName, GoodType.FRUIT.toString(), true);
+        assertTrue(listAfterAddingFruitName.contains(addedFruitName));
 
 
         // Шаг 10-14: Повторение шагов 4-8 с другими тестовыми данными
         goodsPage.clickAddButton();
-        var seconDfruitName = "Слива";
-        addGoodModalPage.setNameInput(seconDfruitName)
+        addGoodModalPage.setNameInput(secondfruitName)
                 .selectType(GoodType.FRUIT);
 
         assertEquals(addGoodModalPage.getTypeSelect().getDomProperty("value"), GoodType.FRUIT.toString());
@@ -265,12 +288,22 @@ public class TestCases extends BaseTest {
         assertEquals(goodsTableInitialData.size() + 2, goodsTableInitialDataUpdated1.size());
 
         var addedRow1 = goodsTableInitialDataUpdated1.getLast();
-        assertEquals(addedRow1.get("Наименование"), seconDfruitName);
+        assertEquals(addedRow1.get("Наименование"), secondfruitName);
         assertEquals(addedRow1.get("Тип"), GoodType.FRUIT.getValue());
         assertFalse(Boolean.parseBoolean(addedRow1.get("Экзотический")));
 
 
         // Шаг проверки записи в БД
+        List<Good> listAfterAddingSecondFruitName;
+        try {
+            ResultSet rs3 = statement.executeQuery(selectQuery);
+            listAfterAddingSecondFruitName = parseResultSet(rs3);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        Good addedSecondFruitName = new Good(secondfruitName, GoodType.FRUIT.toString(),false);
+        assertTrue(listAfterAddingSecondFruitName.contains(addedSecondFruitName));
 
 
         // Шаг 16-17: сброс таблицы БД до исходного состояния, проверка успешности операции
@@ -284,6 +317,16 @@ public class TestCases extends BaseTest {
         var goodsTableInitialDataRestored = goodsPage.parseTableWithoutStalenessException();
         assertEquals(goodsTableInitialData.size(), goodsTableInitialDataRestored.size());
 
-        //SQL запросом проверяем сто сайзы равны
+        List<Good> listAfterReset;
+        try {
+            ResultSet rs4 = statement.executeQuery(selectQuery);
+            listAfterReset = parseResultSet(rs4);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(listBeforeAdding.size(), listAfterReset.size());
+        assertFalse(listAfterReset.contains(addedFruitName));
+        assertFalse(listAfterReset.contains(addedSecondFruitName));
     }
 }
