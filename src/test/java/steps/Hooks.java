@@ -1,8 +1,8 @@
+package steps;
+
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 
@@ -13,13 +13,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 
-public class BaseTest {
+public class Hooks {
     private static Process process;
-    protected WebDriver chromeDriver;
-    protected Statement statement;
+    protected static WebDriver chromeDriver;
+    protected static Statement statement;
+    private static Connection connection;
 
-    @BeforeAll
-    static void setupStand() {
+    @Before(order = 1)
+    public void setupStand() {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", "libs/qualit-sandbox.jar");
             process = processBuilder.start();
@@ -31,30 +32,24 @@ public class BaseTest {
         }
     }
 
-    @BeforeAll
-    static void setupChromeDriver() {
+    @Before(order = 2)
+    public void setupChromeDriver() {
         WebDriverManager.chromedriver().setup();
     }
 
-    @AfterAll
-    static void closeStand() {
-        process.destroyForcibly();
-    }
-
-    @BeforeEach
+    @Before(order = 3)
     public void initChromeDriver() {
         chromeDriver = new ChromeDriver();
         chromeDriver.manage().window().maximize();
         chromeDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
         chromeDriver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(20));
         chromeDriver.manage().timeouts().scriptTimeout(Duration.ofSeconds(20));
-        chromeDriver.get("http://localhost:8080/");
     }
 
-    @BeforeEach
+    @Before(order = 4)
     public void setDBConnection() {
         try {
-            Connection connection = DriverManager.getConnection(
+            connection = DriverManager.getConnection(
                     "jdbc:h2:tcp://localhost:9092/mem:testdb",
                     "user",
                     "pass");
@@ -64,8 +59,22 @@ public class BaseTest {
         }
     }
 
-    @AfterEach
+    @After(order = 1)
     public void tearDownChromeDriver() {
         chromeDriver.quit();
+    }
+
+    @After(order = 2)
+    public void closeDBConnection() {
+        try {
+            statement.close();
+            connection.close();
+        } catch (SQLException ignored) {
+        }
+    }
+
+    @After(order = 3)
+    public void closeStand() {
+        process.destroyForcibly();
     }
 }

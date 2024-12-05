@@ -76,9 +76,4 @@ public class AddGoodModalPage {
         } catch (WebDriverException ignored) {
         }
     }
-
-    public AddGoodModalPage clickModalCloseButton() {
-        modalCloseButton.click();
-        return this;
-    }
 }

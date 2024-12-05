@@ -15,10 +15,9 @@ public class SandboxDropdownMenu {
         PageFactory.initElements(webDriver, this);
     }
 
-    public SandboxDropdownMenu clickItemByText(SandboxItem item) {
+    public void clickItemByText(SandboxItem item) {
         dropdownMenuContainer
                 .findElement(By.xpath(".//a[contains(text(), '%s')]".formatted(item.getValue())))
                 .click();
-        return this;
     }
 }
