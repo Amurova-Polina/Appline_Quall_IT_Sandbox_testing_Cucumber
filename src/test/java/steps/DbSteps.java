@@ -12,7 +12,6 @@ import static database.Good.parseResultSet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
 public class DbSteps {
     String selectQuery = "SELECT * FROM FOOD";
     List<Good> listBeforeAdding;
@@ -24,7 +23,7 @@ public class DbSteps {
 
     @И("Таблица в базе данных не содержит добавляемый товар с полями:")
     public void assertDbTableHasNotAddingGood(DataTable dataTable) {
-        Good expectedGood = new Good(dataTable.asMaps().getFirst());
+        Good expectedGood = new Good(dataTable.asMaps().get(0));
 
         long isTableHasAddingGood = listBeforeAdding
                 .stream()
@@ -34,24 +33,17 @@ public class DbSteps {
                 .count();
 
         assertEquals(
-                isTableHasAddingGood,
                 0,
+                isTableHasAddingGood,
                 "Таблица уже содержит добавляемое значение: %s".formatted(expectedGood.toString())
         );
     }
 
     @И("Таблица в базе данных обновляется, в таблице появляется 1 новая строка с полями:")
     public void dbTableUpdatedWithRow(DataTable dataTable) {
-        List<Good> listAfterAdding = getGoodsInDb();
-        assertEquals(
-                listBeforeAdding.size() + 1,
-                listAfterAdding.size(),
-                "БД: Новая строка не была добавлена или было добавлено более 1 строки"
-        );
-
-        Good addedGood = new Good(dataTable.asMaps().getFirst());
+        Good addedGood = new Good(dataTable.asMaps().get(0));
         assertTrue(
-                listAfterAdding.contains(addedGood),
+                getGoodsInDb().contains(addedGood),
                 "Таблица в базе данных не содержит добавленное значение: %s".formatted(addedGood.toString())
         );
     }

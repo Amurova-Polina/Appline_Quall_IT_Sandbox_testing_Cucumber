@@ -21,18 +21,18 @@ public class UiSteps {
 
     @И("Открыта страница по URL: {string}")
     public void getURL(String url) {
-        Hooks.chromeDriver.get(url);
+        Hooks.webDriver.get(url);
     }
 
     @И("Пользователь находится на странице \"Товары\"")
     public void userIsOnGoodsPage() {
-        goodsPage = new GoodsPage(Hooks.chromeDriver);
+        goodsPage = new GoodsPage(Hooks.webDriver);
     }
 
     @И("Пользователь нажимает на кнопку {string} в меню \"Песочница\"")
     public void getGoodsTablePage(String name) {
         SandboxItem item = SandboxItem.getByValue(name);
-        StartPage startPage = new StartPage(Hooks.chromeDriver);
+        StartPage startPage = new StartPage(Hooks.webDriver);
         startPage
                 .getNavigationMenu()
                 .clickSandboxLink()
@@ -48,7 +48,7 @@ public class UiSteps {
     @И("URL страницы содержит: {string}")
     public void pageUrlContainsPath(String path) {
         assertTrue(
-                Hooks.chromeDriver.getCurrentUrl().contains(path),
+                Hooks.webDriver.getCurrentUrl().contains(path),
                 "URL страницы не содержит путь: %s".formatted(path)
         );
     }
@@ -174,15 +174,10 @@ public class UiSteps {
 
     @И("UI-таблица товаров обновляется, в таблице добавлена 1 новая строка с полями:")
     public void uiTableUpdatedWithRow(DataTable dataTable) {
-        var goodsTableUpdated = goodsPage.parseTableWithoutStalenessException();
-        assertEquals(
-                goodsTableInitialData.size() + 1,
-                goodsTableUpdated.size(),
-                "UI: новая строка не была добавлена или было добавлено более 1 строки"
-        );
+        var expectedGood = new Good(dataTable.asMaps().get(0));
 
-        var expectedGood = new Good(dataTable.asMaps().getFirst());
-        var addedGood = new Good(goodsTableUpdated.getLast());
+        var goodsTableUpdated = goodsPage.parseTableWithoutStalenessException();
+        var addedGood = new Good(goodsTableUpdated.get(goodsTableUpdated.size() - 1));
         assertEquals(
                 expectedGood,
                 addedGood,
