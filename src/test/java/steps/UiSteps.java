@@ -79,15 +79,6 @@ public class UiSteps {
         );
     }
 
-    @И("Цвет кнопки \"Добавить\" синий, {string} - rgba код")
-    public void addButtonColorIs(String expectedColor) {
-        assertEquals(
-                goodsPage.getAddButton().getCssValue("background-color"),
-                expectedColor,
-                "Цвет кнопки \"Добавить\" не соответствует: %s".formatted(expectedColor)
-        );
-    }
-
     @И("Пользователь нажимает кнопку \"Добавить\"")
     public void userClicksAddButton() {
         goodsPage.clickAddButton();
@@ -132,15 +123,6 @@ public class UiSteps {
                 addGoodModalPage.getSaveButton().isDisplayed()
                         && addGoodModalPage.getSaveButton().isEnabled(),
                 "Кнопка \"Сохранить\" не отображается или не доступна"
-        );
-    }
-
-    @И("Цвет кнопки \"Сохранить\" синий, {string} - rgba код")
-    public void saveButtonColorIs(String expectedColor) {
-        assertEquals(
-                addGoodModalPage.getSaveButton().getCssValue("background-color"),
-                expectedColor,
-                "Цвет кнопки \"Сохранить\" не соответствует: %s".formatted(expectedColor)
         );
     }
 

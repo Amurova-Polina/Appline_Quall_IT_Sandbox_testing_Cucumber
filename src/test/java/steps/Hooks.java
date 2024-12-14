@@ -6,6 +6,7 @@ import io.cucumber.java.Before;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
@@ -25,15 +26,18 @@ public class Hooks {
     private static Connection connection;
 
     @Before(order = 1)
-    public void setupChromeDriver() {
+    public void setupWebDriver() {
         var driverType = Configuration.getProperty("driver.type");
-        if (driverType.equals("local")) {
-            WebDriverManager.chromedriver().setup();
-            webDriver = new ChromeDriver();
-        } else if (driverType.equals("remote")) {
-            webDriver = initRemoteChromeDriver();
-        } else throw new IllegalArgumentException("Неизвестный тип драйвера, " +
-                "можно использовать только 'local' или 'remote'");
+        var browserType = Configuration.getProperty("browser.type");
+        if (browserType.equals("chrome") || browserType.equals("firefox"))
+            webDriver = switch (driverType) {
+                case "local" -> initLocalWebDriver(browserType);
+                case "remote" -> initRemoteWebDriver(browserType, Configuration.getProperty("browser.version"));
+                default -> throw new IllegalArgumentException("Указан Неизвестный тип драйвера, " +
+                        "можно использовать только 'local' или 'remote'");
+            };
+        else throw new IllegalArgumentException("Указан неизвестный тип браузера, " +
+                "можно использовать только 'chrome' или 'firefox'");
         webDriver.manage().window().maximize();
         webDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(20));
         webDriver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(20));
@@ -67,11 +71,21 @@ public class Hooks {
         }
     }
 
-    private WebDriver initRemoteChromeDriver() {
+    private WebDriver initLocalWebDriver(String browserType) {
+        if (browserType.equals("firefox")) {
+            WebDriverManager.firefoxdriver().setup();
+            return new FirefoxDriver();
+        } else {
+            WebDriverManager.chromedriver().setup();
+            return new ChromeDriver();
+        }
+    }
+
+    private WebDriver initRemoteWebDriver(String browserType, String browserVersion) {
         DesiredCapabilities capabilities = new DesiredCapabilities();
         Map<String, Object> selenoidOptions = new HashMap<>();
-        selenoidOptions.put("browserName", Configuration.getProperty("browser.type"));
-        selenoidOptions.put("browserVersion", Configuration.getProperty("browser.version"));
+        capabilities.setCapability("browserName", browserType);
+        capabilities.setCapability("browserVersion", browserVersion);
         selenoidOptions.put("enableVNC", true);
         selenoidOptions.put("enableVideo", false);
         capabilities.setCapability("selenoid:options", selenoidOptions);
